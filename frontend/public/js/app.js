@@ -219,10 +219,21 @@ function renderItems(items) {
             image.loading = 'lazy';
 
             image.addEventListener('error', () => {
+                if (!image.dataset.retried) {
+                    image.dataset.retried = 'true';
+
+                    setTimeout(() => {
+                        const separator = item.imageUrl.includes('?') ? '&' : '?';
+                        image.src = `${item.imageUrl}${separator}retry=${Date.now()}`;
+                    }, 500);
+
+                    return;
+                }
+
                 imageContainer.replaceChildren(
                     createPlaceholder()
                 );
-            }, { once: true });
+            });
 
             imageContainer.appendChild(image);
             image.src = item.imageUrl;
