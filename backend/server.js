@@ -1,6 +1,8 @@
 
 require('dotenv').config();
 
+const PostgresAccountRepository = require('./repository/PostgresAccountRepository');
+const { AccountService } = require('./service/AccountService');
 const PostgresOrderRepository = require('./repository/PostgresOrderRepository');
 const OrderService = require('./service/OrderService');
 const createApp = require('./app');
@@ -25,7 +27,8 @@ async function startServer() {
 
         const app = createApp({
             productService,
-            orderService
+            orderService,
+            accountService: new AccountService(new PostgresAccountRepository(pool))
         });
 
 

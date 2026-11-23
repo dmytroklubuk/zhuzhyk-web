@@ -492,7 +492,8 @@ img {
         order: 3;
         width: 100%;
         justify-content: center;
-        gap: 20px;
+        flex-wrap: wrap;
+        gap: 6px 20px;
         font-size: 14px;
     }
 
@@ -832,4 +833,9 @@ img {
 
 #cancelCheckoutButton:hover {
     background: rgba(128, 128, 128, 0.08);
+}
+.checkout-account-note a,
+#checkoutMessage a {
+    color: var(--burgundy);
+    text-decoration: underline;
 }

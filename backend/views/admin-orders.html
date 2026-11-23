@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="uk">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Замовлення · Жужик</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/orders.css">
+    <script type="module" src="/js/admin-orders.js"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="container header-content">
+            <a href="/" class="logo"><img src="/images/logo-main.jpg" alt=""><span>ЖУЖИК</span></a>
+            <nav class="navigation" aria-label="Адміністрування"><a href="/admin">Керування товарами</a></nav>
+        </div>
+    </header>
+    <main class="container orders-page">
+        <div class="order-heading">
+            <h1>Замовлення</h1>
+            <button class="secondary-button" id="refresh" type="button">Оновити</button>
+        </div>
+        <p id="feedback" role="status">Завантаження…</p>
+        <div id="orders" class="order-list"></div>
+    </main>
+</body>
+</html>

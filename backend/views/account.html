@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="uk">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Особистий кабінет · Жужик</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/orders.css">
+    <script type="module" src="/js/account.js"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="container header-content">
+            <a href="/" class="logo"><img src="/images/logo-main.jpg" alt=""><span>ЖУЖИК</span></a>
+            <nav class="navigation" aria-label="Головна навігація"><a href="/#catalog">До каталогу</a></nav>
+        </div>
+    </header>
+    <main class="container orders-page">
+        <h1>Особистий кабінет</h1>
+        <p id="feedback" role="status">Завантаження…</p>
+
+        <section class="order-card account-form" id="guest" hidden>
+            <h2 id="form-title">Вхід до кабінету</h2>
+            <form id="account-form">
+                <label id="name-field" hidden>Ім’я
+                    <input name="name" autocomplete="name" minlength="2" maxlength="100" disabled>
+                </label>
+                <label>Електронна адреса
+                    <input name="email" type="email" autocomplete="username" maxlength="254" required>
+                </label>
+                <label>Пароль
+                    <input name="password" type="password" autocomplete="current-password" minlength="10" maxlength="128" required>
+                </label>
+                <button class="primary-button" id="submit-account" type="submit">Увійти</button>
+            </form>
+            <button class="text-button" type="button" id="toggle-mode">Створити акаунт</button>
+        </section>
+
+        <section id="profile" hidden>
+            <div class="order-card order-heading">
+                <div><h2 id="profile-name"></h2><p id="profile-email"></p></div>
+                <button class="secondary-button" id="logout" type="button">Вийти</button>
+            </div>
+            <div class="order-heading orders-heading">
+                <h2>Мої замовлення</h2>
+                <button class="secondary-button" id="refresh" type="button">Оновити</button>
+            </div>
+            <div id="orders" class="order-list"></div>
+        </section>
+    </main>
+</body>
+</html>

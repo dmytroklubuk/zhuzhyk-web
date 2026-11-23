@@ -303,6 +303,11 @@ checkoutForm.addEventListener('submit', async (event) => {
         checkoutMessage.textContent =
             `Замовлення №${result.order.id} успішно створено!`;
 
+        const accountLink = document.createElement('a');
+        accountLink.href = '/account';
+        accountLink.textContent = ' Особистий кабінет';
+        checkoutMessage.append(accountLink);
+
         sessionStorage.removeItem(PENDING_ORDER_KEY);
 
         cart = [];
