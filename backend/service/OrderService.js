@@ -5,12 +5,43 @@ const {
     ConflictError
 } = require('./errors');
 
+const statusTransitions = new Map([
+    ['confirmed', { previous: 'new' }],
+    ['ready', { previous: 'confirmed', delivery: 'pickup' }],
+    ['shipped', { previous: 'confirmed', delivery: 'delivery' }],
+    ['completed', { previous: { pickup: 'ready', delivery: 'shipped' } }]
+]);
+
 class OrderService {
     constructor(orderRepository) {
         this.orderRepository = orderRepository;
     }
 
-    async createOrder(data, idempotencyKey) {
+    listForAccount(accountId) {
+        return this.orderRepository.listOrders(accountId);
+    }
+
+    listForAdmin() {
+        return this.orderRepository.listOrders(null, { admin: true });
+    }
+
+    async advanceStatus(id, { status, deliveryMethod } = {}) {
+        const transition = statusTransitions.get(status);
+        if (!/^[1-9]\d*$/.test(id) || !Number.isSafeInteger(Number(id)) || !transition ||
+            !['pickup', 'delivery'].includes(deliveryMethod)) {
+            throw new ValidationError([{ field: 'status', message: 'Перевірте номер і статус замовлення.' }]);
+        }
+
+        const previous = typeof transition.previous === 'string'
+            ? transition.previous
+            : transition.previous[deliveryMethod];
+        if ((transition.delivery && transition.delivery !== deliveryMethod) ||
+            !await this.orderRepository.advanceStatus(id, status, previous, deliveryMethod)) {
+            throw new ConflictError('ORDER_STATUS_CONFLICT', 'Статус уже змінився або цей перехід недоступний.');
+        }
+    }
+
+    async createOrder(data, idempotencyKey, accountId = null) {
         const details = [];
 
         if (
@@ -142,7 +173,8 @@ class OrderService {
             return await this.orderRepository.createOrder(
                 { name, phone, deliveryMethod },
                 validatedItems,
-                idempotencyKey
+                idempotencyKey,
+                accountId
             );
         } catch (error) {
             if (error.code === 'PRODUCT_NOT_FOUND') {

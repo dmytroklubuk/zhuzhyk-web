@@ -2,6 +2,7 @@
 const express = require('express');
 const path = require('path');
 
+const { createAccountRoutes } = require('./api/accountRoutes');
 const createOrderRoutes = require('./api/orderRoutes');
 const createProductRoutes = require('./api/productRoutes');
 const { errorHandler, notFoundHandler } = require('./api/errorHandler');
@@ -11,7 +12,7 @@ const requestId = require('./middleware/requestId');
 const rateLimiter = require('./middleware/rateLimiter');
 const { metricsMiddleware, metricsHandler } = require('./middleware/metrics');
 
-function createApp({ productService, orderService }) {
+function createApp({ productService, orderService, accountService }) {
     const app = express();
 
     app.use(metricsMiddleware);
@@ -19,12 +20,6 @@ function createApp({ productService, orderService }) {
 
     // Додаємо унікальний ID до кожного HTTP-запиту
     app.use(requestId);
-
-    // Обмежуємо кількість запитів
-    app.use(rateLimiter);
-
-    // Дозволяємо серверу приймати JSON
-    app.use(express.json());
 
     // Віддаємо HTML, CSS та JavaScript клієнту
     app.use(express.static(path.join(__dirname, '../frontend/public')));
@@ -34,6 +29,12 @@ function createApp({ productService, orderService }) {
         '/uploads',
         express.static(path.join(__dirname, 'uploads'))
     );
+
+    // Обмежуємо кількість запитів
+    app.use(rateLimiter);
+
+    // Дозволяємо серверу приймати JSON
+    app.use(express.json());
 
     // Перевірка працездатності сервера
    app.get('/health', (req, res) => {
@@ -46,9 +47,27 @@ function createApp({ productService, orderService }) {
         res.sendFile(path.join(__dirname, 'views/admin.html'));
     });
 
+    app.get('/account', (req, res) => {
+        res.sendFile(path.join(__dirname, 'views/account.html'));
+    });
+
+    app.get('/admin/orders', requireAdmin, (req, res) => {
+        res.sendFile(path.join(__dirname, 'views/admin-orders.html'));
+    });
+
+    app.get('/admin/api/orders', requireAdmin, async (req, res) => {
+        res.json({ orders: await orderService.listForAdmin() });
+    });
+
+    app.patch('/admin/api/orders/:id', requireAdmin, async (req, res) => {
+        await orderService.advanceStatus(req.params.id, req.body ?? {});
+        res.sendStatus(204);
+    });
+
     // CRUD API для товарів
     app.use('/items', createProductRoutes(productService));
-    app.use('/orders', createOrderRoutes(orderService));
+    app.use('/orders', createOrderRoutes(orderService, accountService));
+    app.use('/api/account', createAccountRoutes(accountService, orderService));
 
     // Обробка неіснуючих маршрутів
     app.use(notFoundHandler);

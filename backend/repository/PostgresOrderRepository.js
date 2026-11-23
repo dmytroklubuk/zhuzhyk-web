@@ -7,11 +7,41 @@ class PostgresOrderRepository {
         this.pool = pool;
     }
 
-    async createOrder(customer, items, idempotencyKey) {
+    async listOrders(accountId, { admin = false } = {}) {
+        const customerFields = admin
+            ? 'o.customer_name AS "customerName", o.customer_phone AS "customerPhone",'
+            : '';
+        const where = admin ? '' : 'WHERE o.account_id = $1';
+        const { rows } = await this.pool.query(
+            `SELECT o.id, o.status, o.created_at AS "createdAt", o.total_amount AS "totalAmount",
+                    o.delivery_method AS "deliveryMethod", ${customerFields}
+                    COALESCE((
+                        SELECT json_agg(json_build_object(
+                            'name', i.product_name, 'quantity', i.quantity,
+                            'unitPrice', i.unit_price, 'subtotal', i.subtotal
+                        ) ORDER BY i.id)
+                        FROM public.order_items i WHERE i.order_id = o.id
+                    ), '[]'::json) AS items
+             FROM public.orders o ${where} ORDER BY o.id DESC`,
+            admin ? [] : [accountId]
+        );
+        return rows;
+    }
+
+    async advanceStatus(id, nextStatus, previousStatus, deliveryMethod) {
+        const { rowCount } = await this.pool.query(
+            `UPDATE public.orders SET status = $2
+             WHERE id = $1 AND status = $3 AND ($4::text IS NULL OR delivery_method = $4)`,
+            [id, nextStatus, previousStatus, deliveryMethod]
+        );
+        return rowCount === 1;
+    }
+
+    async createOrder(customer, items, idempotencyKey, accountId = null) {
         const client = await this.pool.connect();
 
         const requestHash = createHash('sha256')
-            .update(JSON.stringify({ customer, items }))
+            .update(JSON.stringify(accountId === null ? { customer, items } : { customer, items, accountId }))
             .digest('hex');
 
         try {
@@ -110,14 +140,15 @@ class PostgresOrderRepository {
             const orderResult = await client.query(
                 `INSERT INTO public.orders
                  (customer_name, customer_phone,
-                  delivery_method, total_amount)
-                 VALUES ($1, $2, $3, $4)
+                  delivery_method, total_amount, account_id)
+                 VALUES ($1, $2, $3, $4, $5)
                      RETURNING id, status, created_at`,
                 [
                     customer.name,
                     customer.phone,
                     customer.deliveryMethod,
-                    total
+                    total,
+                    accountId
                 ]
             );
 
