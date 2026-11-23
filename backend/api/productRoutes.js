@@ -2,6 +2,7 @@
 const express = require('express');
 const fs = require('fs');
 const IdempotencyStore = require('../middleware/idempotencyStore');
+const requireAdmin = require('../middleware/requireAdmin');
 const upload = require('../middleware/uploadMiddleware');
 
 function createProductRoutes(productService) {
@@ -42,7 +43,7 @@ function createProductRoutes(productService) {
         }
     });
 
-    router.post('/', upload.single('image'), async (req, res, next) => {
+    router.post('/', requireAdmin, upload.single('image'), async (req, res, next) => {
         try {
             const data = prepareProductData(req);
             const key = req.get('Idempotency-Key');
@@ -111,7 +112,7 @@ function createProductRoutes(productService) {
         }
     });
 
-    router.patch('/:id', upload.single('image'), async (req, res, next) => {
+    router.patch('/:id', requireAdmin, upload.single('image'), async (req, res, next) => {
         try {
             const data = prepareProductData(req);
 
@@ -127,7 +128,7 @@ function createProductRoutes(productService) {
         }
     });
 
-    router.delete('/:id', async (req, res, next) => {
+    router.delete('/:id', requireAdmin, async (req, res, next) => {
         try {
             await productService.remove(req.params.id);
 

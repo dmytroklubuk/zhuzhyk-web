@@ -95,81 +95,11 @@
                 Жужик — навчальний вебпроєкт,
                 створений із використанням
                 HTML, CSS, JavaScript, Node.js,
-                Express та SQLite.
+                Express та PostgreSQL.
             </p>
         </div>
     </section>
 
-    <section class="admin section" id="admin">
-        <div class="container">
-            <h2>Керування товарами</h2>
-
-            <p>
-                Тимчасова форма для тестування API.
-                Пізніше вона буде перенесена
-                до захищеної адмінпанелі.
-            </p>
-
-
-            <form id="productForm" class="product-form">
-
-                <input
-                        id="productName"
-                        type="text"
-                        placeholder="Назва товару"
-                        required
-                >
-
-                <input
-                        id="productDescription"
-                        type="text"
-                        placeholder="Опис товару"
-                >
-
-                <input
-                        id="productPrice"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        placeholder="Ціна"
-                        required
-                >
-
-                <input
-                        id="productStock"
-                        type="number"
-                        min="0"
-                        step="1"
-                        placeholder="Кількість"
-                        required
-                >
-
-                <div class="image-upload">
-                    <label for="productImage">
-                        📷 Обрати фотографію товару
-                    </label>
-
-                    <input
-                            id="productImage"
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp"
-                    >
-
-                    <div id="imagePreview" class="image-preview">
-                        <span>Фото з’явиться тут після вибору</span>
-                    </div>
-                </div>
-
-                <button id="createButton" type="submit">
-                    Додати товар
-                </button>
-
-            </form>
-
-
-            <p id="createStatus" role="status"></p>
-        </div>
-    </section>
 </main>
 
 <footer class="footer">

@@ -3,31 +3,37 @@ Web application for Zhuzhyk online store coursework
 
 ## Запуск
 
-Потрібен Node.js 22 або новіший (вимога `better-sqlite3`).
+Потрібні Node.js 24 і PostgreSQL із таблицями магазину. У підготовленій
+хмарній конфігурації скрипт запуску налаштовує локальну базу автоматично.
+Для звичайного запуску задайте `DATABASE_URL` у середовищі або в локальному
+`backend/.env`.
 
 ```bash
 cd backend
-npm install
-npm start        # http://localhost:3000
-npm test         # юніт-тести service/
+npm ci
+npm start
+npm test
 ```
 
-Змінні оточення (необов'язково): `PORT` (за замовчуванням 3000), `DB_PATH` (за замовчуванням `backend/items.db`).
+За замовчуванням магазин працює на порту 3000. Для перевірки використовуйте
+`GET /health` і `GET /items`.
 
-Швидка перевірка:
+## Адмінпанель
 
-```bash
-curl http://localhost:3000/health
-curl http://localhost:3000/items
-curl -X POST http://localhost:3000/items -H "Content-Type: application/json" \
-     -d '{"name":"Молоко","price":42.5,"stock":20}'
-curl -X PATCH http://localhost:3000/items/1 -H "Content-Type: application/json" -d '{"price":45}'
-curl -X DELETE http://localhost:3000/items/1
-```
+Задайте довгий унікальний `ADMIN_PASSWORD` у середовищі процесу або в
+локальному `backend/.env` і перезапустіть застосунок. Відкрийте `/admin`
+і введіть ім’я користувача `admin` та заданий пароль. Для доступу з іншого
+пристрою використовуйте HTTPS, оскільки вхід працює через HTTP Basic.
+Docker Compose передає `ADMIN_PASSWORD` із середовища або кореневого `.env`.
+
+У панелі можна додавати, редагувати й видаляти товари та завантажувати їхні
+фотографії. Запити `POST /items`, `PATCH /items/:id` і `DELETE /items/:id`
+потребують облікових даних адміністратора та заголовка `X-Admin-Request: 1`.
 
 ## Архітектура
 
-Модульний моноліт із шарами `api/ → service/ → domain/` (+ `repository/` для SQLite). Рішення зафіксовані в [`docs/adr/`](docs/adr/):
+Модульний моноліт із шарами `api/ → service/ → domain/` і репозиторіями PostgreSQL.
+Рішення зафіксовані в [`docs/adr/`](docs/adr/):
 
 - [0001 — стиль архітектури](docs/adr/0001-architecture-style.md)
 - [0002 — шарова структура](docs/adr/0002-layered-architecture.md)

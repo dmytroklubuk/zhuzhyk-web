@@ -5,60 +5,6 @@ const status = document.getElementById('status');
 const warning = document.getElementById('warning');
 const searchInput = document.getElementById('searchInput');
 
-const form = document.getElementById('productForm');
-const createButton = document.getElementById('createButton');
-const createStatus = document.getElementById('createStatus');
-
-const imageInput = document.getElementById('productImage');
-const imagePreview = document.getElementById('imagePreview');
-
-let previewUrl = null;
-
-imageInput.addEventListener('change', () => {
-    const file = imageInput.files[0];
-
-    if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-        previewUrl = null;
-    }
-
-    imagePreview.replaceChildren();
-
-    if (!file) {
-        imagePreview.textContent =
-            'Фото з’явиться тут після вибору';
-        return;
-    }
-
-    const allowedTypes = [
-        'image/jpeg',
-        'image/png',
-        'image/webp'
-    ];
-
-    if (!allowedTypes.includes(file.type)) {
-        imageInput.value = '';
-        imagePreview.textContent =
-            'Дозволені лише JPG, PNG та WEBP';
-        return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-        imageInput.value = '';
-        imagePreview.textContent =
-            'Максимальний розмір фотографії — 5 МБ';
-        return;
-    }
-
-    previewUrl = URL.createObjectURL(file);
-
-    const image = document.createElement('img');
-    image.src = previewUrl;
-    image.alt = 'Попередній перегляд фотографії';
-
-    imagePreview.appendChild(image);
-});
-
 let allItems = [];
 let failures = 0;
 
@@ -353,85 +299,7 @@ async function loadItems() {
 }
 
 
-async function createProduct(event) {
-    event.preventDefault();
-
-    const name = document.getElementById('productName').value.trim();
-    const description = document.getElementById('productDescription').value.trim();
-    const price = Number(document.getElementById('productPrice').value);
-    const stock = Number(document.getElementById('productStock').value);
-    const file = imageInput.files[0];
-
-    if (
-        !name ||
-        !Number.isFinite(price) ||
-        price < 0 ||
-        !Number.isInteger(stock) ||
-        stock < 0
-    ) {
-        createStatus.textContent =
-            'Перевірте правильність введених даних.';
-        return;
-    }
-
-    if (file && (
-        !['image/jpeg', 'image/png', 'image/webp'].includes(file.type) ||
-        file.size > 5 * 1024 * 1024
-    )) {
-        createStatus.textContent =
-            'Перевірте формат і розмір фотографії.';
-        return;
-    }
-
-    const formData = new FormData();
-
-    formData.append('name', name);
-    formData.append('description', description);
-    formData.append('price', String(price));
-    formData.append('stock', String(stock));
-
-    if (file) {
-        formData.append('image', file);
-    }
-
-    createButton.disabled = true;
-    createStatus.textContent = 'Створення товару...';
-
-    try {
-        const response = await fetchWithResilience('/items', {
-            method: 'POST',
-            body: formData
-        });
-
-        const created = await response.json();
-
-        createStatus.textContent =
-            `Товар успішно створено! ID: ${created.id}`;
-
-        form.reset();
-
-        if (previewUrl) {
-            URL.revokeObjectURL(previewUrl);
-            previewUrl = null;
-        }
-
-        imagePreview.replaceChildren();
-
-        imagePreview.textContent =
-            'Фото з’явиться тут після вибору';
-
-        await loadItems();
-
-    } catch (error) {
-        createStatus.textContent =
-            `Помилка створення: ${error.message}`;
-    } finally {
-        createButton.disabled = false;
-    }
-}
-
 loadButton.addEventListener('click', loadItems);
 searchInput.addEventListener('input', filterItems);
-form.addEventListener('submit', createProduct);
 
 loadItems();
