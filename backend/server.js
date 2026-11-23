@@ -1,6 +1,8 @@
 
 require('dotenv').config();
 
+const PostgresOrderRepository = require('./repository/PostgresOrderRepository');
+const OrderService = require('./service/OrderService');
 const createApp = require('./app');
 const { createPostgresPool } = require('./repository/postgresDatabase');
 const PostgresProductRepository = require('./repository/PostgresProductRepository');
@@ -14,9 +16,18 @@ async function startServer() {
     try {
         await pool.query('SELECT 1');
 
+
         const repository = new PostgresProductRepository(pool);
         const productService = new ProductService(repository);
-        const app = createApp({ productService });
+
+        const orderRepository = new PostgresOrderRepository(pool);
+        const orderService = new OrderService(orderRepository);
+
+        const app = createApp({
+            productService,
+            orderService
+        });
+
 
         app.listen(PORT, () => {
             console.log(`Сервер запущено: http://localhost:${PORT}`);

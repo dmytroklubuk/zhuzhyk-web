@@ -1,6 +1,9 @@
 
-const multer = require('multer');
-const { ValidationError, NotFoundError } = require('../service/errors');
+const multer = require('multer');const {
+    ValidationError,
+    NotFoundError,
+    ConflictError
+} = require('../service/errors');
 
 function sendError(res, status, error, code, details, retryAfter) {
     const body = {
@@ -51,6 +54,21 @@ function errorHandler(err, req, res, next) {
                 field: 'id',
                 message: `Ресурс з ID ${err.id} не знайдено`
             }]
+        );
+    }
+
+    if (err instanceof ConflictError) {
+        return sendError(
+            res,
+            409,
+            'Conflict',
+            err.code,
+            err.details.length > 0 ? err.details : [
+                {
+                    field: 'items',
+                    message: err.message
+                }
+            ]
         );
     }
 

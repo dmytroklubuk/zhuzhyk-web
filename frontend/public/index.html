@@ -181,6 +181,7 @@
 
 <div id="cartOverlay" class="cart-overlay" hidden></div>
 
+
 <aside id="cartPanel" class="cart-panel" aria-label="Кошик покупця" hidden>
     <div class="cart-header">
         <h2>🛒 Мій кошик</h2>
@@ -197,7 +198,54 @@
             Оформити замовлення
         </button>
     </div>
+
+    <div id="checkoutFormContainer" class="checkout-container" hidden>
+        <h3>Оформлення замовлення</h3>
+
+        <form id="checkoutForm">
+            <label for="customerName">Ім'я покупця</label>
+            <input
+                    id="customerName"
+                    type="text"
+                    minlength="2"
+                    maxlength="100"
+                    autocomplete="name"
+                    required
+            >
+
+            <label for="customerPhone">Номер телефону</label>
+            <input
+                    id="customerPhone"
+                    type="tel"
+                    autocomplete="tel"
+                    required
+            >
+
+            <label for="deliveryMethod">Спосіб отримання</label>
+            <select id="deliveryMethod" required>
+                <option value="">Оберіть спосіб</option>
+                <option value="pickup">Самовивіз</option>
+                <option value="delivery">Доставка</option>
+            </select>
+
+            <p class="checkout-note">
+                Демонстраційне оформлення для навчального проєкту.
+                Реальні замовлення та оплата не здійснюються.
+            </p>
+
+            <p id="checkoutMessage" role="status" aria-live="polite"></p>
+
+            <button id="submitOrderButton" type="submit" disabled>
+                Підтвердити навчальне замовлення
+            </button>
+
+            <button id="cancelCheckoutButton" type="button">
+                Назад до кошика
+            </button>
+        </form>
+    </div>
 </aside>
+
 
 </body>
 </html>

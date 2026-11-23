@@ -745,3 +745,91 @@ img {
     color: var(--ink);
     font-weight: 800;
 }
+
+
+.checkout-container {
+    padding: 20px;
+    border-top: 1px solid #e5e7eb;
+    overflow-y: auto;
+}
+
+.checkout-container h3 {
+    margin: 0 0 20px;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+#checkoutForm {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#checkoutForm label {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+#checkoutForm input,
+#checkoutForm select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    font-size: 15px;
+    background: #fff;
+    color: #111827;
+    box-sizing: border-box;
+}
+
+#checkoutForm input:focus,
+#checkoutForm select:focus {
+    outline: none;
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+}
+
+.checkout-note {
+    font-size: 12px;
+    line-height: 1.5;
+    color: #6b7280;
+}
+
+#checkoutMessage {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+#submitOrderButton {
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    background: #f59e0b;
+    color: #111827;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+#submitOrderButton:hover:not(:disabled) {
+    background: #d97706;
+}
+
+#submitOrderButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#cancelCheckoutButton {
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    background: transparent;
+    color: inherit;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+#cancelCheckoutButton:hover {
+    background: rgba(128, 128, 128, 0.08);
+}

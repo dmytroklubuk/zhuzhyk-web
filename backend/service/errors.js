@@ -1,11 +1,9 @@
-// Помилки рівня service/. Вони не знають про HTTP —
-// у статус-коди їх перетворює api/errorHandler.js.
 
 class ValidationError extends Error {
     constructor(details) {
         super('Validation failed');
         this.name = 'ValidationError';
-        this.details = details; // [{ field, message }]
+        this.details = details;
     }
 }
 
@@ -18,4 +16,17 @@ class NotFoundError extends Error {
     }
 }
 
-module.exports = { ValidationError, NotFoundError };
+class ConflictError extends Error {
+    constructor(code, message, details = []) {
+        super(message);
+        this.name = 'ConflictError';
+        this.code = code;
+        this.details = details;
+    }
+}
+
+module.exports = {
+    ValidationError,
+    NotFoundError,
+    ConflictError
+};

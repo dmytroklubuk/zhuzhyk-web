@@ -1,5 +1,6 @@
 
 const CART_KEY = 'zhuzhyk-cart';
+const PENDING_ORDER_KEY = 'zhuzhyk-pending-order';
 
 let cart = loadCart();
 
@@ -10,6 +11,7 @@ const cartPanel = document.getElementById('cartPanel');
 const closeCartButton = document.getElementById('closeCart');
 const cartItems = document.getElementById('cartItems');
 const cartTotal = document.getElementById('cartTotal');
+const checkoutButton = document.getElementById('checkoutButton');
 
 function loadCart() {
     try {
@@ -23,6 +25,40 @@ function loadCart() {
 function saveCart() {
     localStorage.setItem(CART_KEY, JSON.stringify(cart));
 }
+
+
+function getIdempotencyKey(orderData) {
+    const requestData = JSON.stringify(orderData);
+
+    try {
+        const saved = JSON.parse(
+            sessionStorage.getItem(PENDING_ORDER_KEY)
+        );
+
+        if (
+            saved &&
+            saved.requestData === requestData &&
+            typeof saved.key === 'string'
+        ) {
+            return saved.key;
+        }
+    } catch {
+        // Створимо новий ключ, якщо збережені дані некоректні
+    }
+
+    const key = crypto.randomUUID();
+
+    sessionStorage.setItem(
+        PENDING_ORDER_KEY,
+        JSON.stringify({
+            key,
+            requestData
+        })
+    );
+
+    return key;
+}
+
 
 function formatCartPrice(price) {
     return new Intl.NumberFormat('uk-UA', {
@@ -84,6 +120,9 @@ function renderCart() {
 
     cartTotal.textContent = formatCartPrice(total);
     cartCount.textContent = count;
+
+// Активуємо оформлення, якщо кошик не порожній
+    checkoutButton.disabled = cart.length === 0;
 }
 
 function addToCart(product) {
@@ -166,3 +205,128 @@ cartOverlay.addEventListener('click', closeCart);
 renderCart();
 
 window.addToCart = addToCart;
+
+
+const checkoutContainer = document.getElementById('checkoutFormContainer');
+const cancelCheckoutButton = document.getElementById('cancelCheckoutButton');
+const cartItemsContainer = document.getElementById('cartItems');
+const cartFooter = document.querySelector('.cart-footer');
+
+function showCheckoutForm() {
+    if (!checkoutContainer || !cartItemsContainer || !cartFooter) {
+        return;
+    }
+
+    cartItemsContainer.hidden = true;
+    cartFooter.hidden = true;
+    checkoutContainer.hidden = false;
+}
+
+function hideCheckoutForm() {
+    if (!checkoutContainer || !cartItemsContainer || !cartFooter) {
+        return;
+    }
+
+    checkoutContainer.hidden = true;
+    cartItemsContainer.hidden = false;
+    cartFooter.hidden = false;
+}
+
+checkoutButton?.addEventListener('click', showCheckoutForm);
+cancelCheckoutButton?.addEventListener('click', hideCheckoutForm);
+
+
+const checkoutForm = document.getElementById('checkoutForm');
+const customerName = document.getElementById('customerName');
+const customerPhone = document.getElementById('customerPhone');
+const deliveryMethod = document.getElementById('deliveryMethod');
+const submitOrderButton = document.getElementById('submitOrderButton');
+const checkoutMessage = document.getElementById('checkoutMessage');
+
+function updateSubmitButton() {
+    submitOrderButton.disabled =
+        cart.length === 0 || !checkoutForm.checkValidity();
+}
+
+checkoutForm.addEventListener('input', updateSubmitButton);
+checkoutForm.addEventListener('change', updateSubmitButton);
+
+
+checkoutForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    if (cart.length === 0 || !checkoutForm.checkValidity()) {
+        updateSubmitButton();
+        return;
+    }
+
+    submitOrderButton.disabled = true;
+    checkoutMessage.textContent = 'Відправляємо замовлення...';
+
+    const orderData = {
+        customer: {
+            name: customerName.value.trim(),
+            phone: customerPhone.value.trim(),
+            deliveryMethod: deliveryMethod.value
+        },
+        items: cart.map(item => ({
+            productId: item.id,
+            quantity: item.quantity
+        }))
+    };
+
+    try {
+        const idempotencyKey = getIdempotencyKey(orderData);
+
+        const response = await fetch('/orders', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Idempotency-Key': idempotencyKey
+            },
+            body: JSON.stringify(orderData)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            const error = new Error(
+                result.details?.[0]?.message ||
+                result.error ||
+                'Не вдалося оформити замовлення'
+            );
+
+            error.code = result.code;
+            throw error;
+        }
+
+        checkoutMessage.textContent =
+            `Замовлення №${result.order.id} успішно створено!`;
+
+        sessionStorage.removeItem(PENDING_ORDER_KEY);
+
+        cart = [];
+        saveCart();
+        renderCart();
+
+        checkoutForm.reset();
+        submitOrderButton.disabled = true;
+
+    } catch (error) {
+        checkoutMessage.textContent = error.message;
+
+        if (
+            error.code === 'VALIDATION_FAILED' ||
+            error.code === 'INSUFFICIENT_STOCK' ||
+            error.code === 'PRODUCT_NOT_FOUND' ||
+            error.code === 'IDEMPOTENCY_KEY_CONFLICT'
+        ) {
+            sessionStorage.removeItem(PENDING_ORDER_KEY);
+        }
+
+        updateSubmitButton();
+    }
+});
+
+
+updateSubmitButton();

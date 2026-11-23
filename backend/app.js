@@ -2,6 +2,7 @@
 const express = require('express');
 const path = require('path');
 
+const createOrderRoutes = require('./api/orderRoutes');
 const createProductRoutes = require('./api/productRoutes');
 const { errorHandler, notFoundHandler } = require('./api/errorHandler');
 
@@ -9,7 +10,7 @@ const requestId = require('./middleware/requestId');
 const rateLimiter = require('./middleware/rateLimiter');
 const { metricsMiddleware, metricsHandler } = require('./middleware/metrics');
 
-function createApp({ productService }) {
+function createApp({ productService, orderService }) {
     const app = express();
 
     app.use(metricsMiddleware);
@@ -42,6 +43,7 @@ function createApp({ productService }) {
 
     // CRUD API для товарів
     app.use('/items', createProductRoutes(productService));
+    app.use('/orders', createOrderRoutes(orderService));
 
     // Обробка неіснуючих маршрутів
     app.use(notFoundHandler);
