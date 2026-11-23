@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="uk">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Керування товарами · Жужик</title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <script src="/js/admin.js" defer></script>
+</head>
+<body>
+    <header><a href="/">← До магазину</a><span>ЖУЖИК</span></header>
+    <main>
+        <h1>Керування товарами</h1>
+        <p id="feedback" role="status"></p>
+        <div class="workspace">
+            <section class="panel">
+                <h2>Каталог</h2>
+                <div class="table-scroll">
+                    <table>
+                        <thead><tr><th>Товар</th><th>Ціна</th><th>Залишок</th><th>Дії</th></tr></thead>
+                        <tbody id="products"></tbody>
+                    </table>
+                </div>
+            </section>
+            <form class="panel" id="product-form">
+                <h2 id="form-title">Додати товар</h2>
+                <label>Назва<input name="name" maxlength="200" required></label>
+                <label>Опис<textarea name="description" maxlength="2000" rows="3"></textarea></label>
+                <div class="fields">
+                    <label>Ціна, грн<input name="price" type="number" min="0" step="0.01" required></label>
+                    <label>Залишок<input name="stock" type="number" min="0" step="1" required></label>
+                </div>
+                <label>Фото<input name="image" type="file" accept="image/jpeg,image/png,image/webp"></label>
+                <div class="actions">
+                    <button type="submit" id="save">Додати товар</button>
+                    <button type="button" id="cancel" hidden>Скасувати</button>
+                </div>
+            </form>
+        </div>
+    </main>
+</body>
+</html>

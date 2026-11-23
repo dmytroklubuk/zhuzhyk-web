@@ -6,6 +6,7 @@ const createOrderRoutes = require('./api/orderRoutes');
 const createProductRoutes = require('./api/productRoutes');
 const { errorHandler, notFoundHandler } = require('./api/errorHandler');
 
+const requireAdmin = require('./middleware/requireAdmin');
 const requestId = require('./middleware/requestId');
 const rateLimiter = require('./middleware/rateLimiter');
 const { metricsMiddleware, metricsHandler } = require('./middleware/metrics');
@@ -40,6 +41,10 @@ function createApp({ productService, orderService }) {
         status: 'ok'
     });
 });
+
+    app.get('/admin', requireAdmin, (req, res) => {
+        res.sendFile(path.join(__dirname, 'views/admin.html'));
+    });
 
     // CRUD API для товарів
     app.use('/items', createProductRoutes(productService));
