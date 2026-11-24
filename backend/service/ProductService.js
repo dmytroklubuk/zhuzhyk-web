@@ -57,7 +57,8 @@ class ProductService {
         return toDto(toDomain(row));
     }
 
-    async create(dto) {
+    async create(dto, photo = null) {
+        if (photo) dto = { ...dto, imageUrl: photo.path };
         const { values, details } = validateProductInput(
             dto,
             { partial: false }
@@ -76,12 +77,13 @@ class ProductService {
             values.imageUrl ?? null
         );
 
-        const saved = await this.repository.insert(toRow(product));
+        const saved = await this.repository.insert(toRow(product), photo);
 
         return toDto(toDomain(saved));
     }
 
-    async update(rawId, dto) {
+    async update(rawId, dto, photo = null) {
+        if (photo) dto = { ...dto, imageUrl: photo.path };
         const id = parseId(rawId);
         const existing = await this.repository.findById(id);
 
@@ -107,13 +109,17 @@ class ProductService {
             values.imageUrl ?? existing.imageUrl ?? null
         );
 
-        const saved = await this.repository.update(id, toRow(merged));
+        const saved = await this.repository.update(id, toRow(merged), photo, values.imageUrl ?? null);
 
         if (!saved) {
             throw new NotFoundError('Product', id);
         }
 
         return toDto(toDomain(saved));
+    }
+
+    findPhoto(path) {
+        return this.repository.findPhoto(path);
     }
 
     async remove(rawId) {
