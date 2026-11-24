@@ -1,59 +1,20 @@
-
 const multer = require('multer');
-const path = require('path');
-const crypto = require('crypto');
-const fs = require('fs');
-
-const uploadDirectory = path.join(
-    __dirname,
-    '../uploads/products'
-);
-
-fs.mkdirSync(uploadDirectory, { recursive: true });
-
-const allowedTypes = {
-    'image/jpeg': '.jpg',
-    'image/png': '.png',
-    'image/webp': '.webp'
-};
-
-const storage = multer.diskStorage({
-    destination: (req, file, callback) => {
-        callback(null, uploadDirectory);
-    },
-
-    filename: (req, file, callback) => {
-        const extension = allowedTypes[file.mimetype];
-
-        const filename =
-            `${crypto.randomUUID()}${extension}`;
-
-        callback(null, filename);
-    }
-});
-
-function fileFilter(req, file, callback) {
-    const extension = path.extname(file.originalname).toLowerCase();
-
-    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
-
-    if (
-        !allowedTypes[file.mimetype] ||
-        !allowedExtensions.includes(extension)
-    ) {
-        return callback(
-            new Error('Дозволені лише JPG, PNG та WEBP фотографії')
-        );
-    }
-
-    callback(null, true);
-}
+const path = require('node:path');
+const { MAX_PHOTO_BYTES, PHOTO_EXTENSIONS } = require('../service/productPhoto');
 
 const upload = multer({
-    storage,
-    fileFilter,
+    storage: multer.memoryStorage(),
+    fileFilter(req, file, callback) {
+        const extension = path.extname(file.originalname).toLowerCase();
+
+        if (!PHOTO_EXTENSIONS[file.mimetype]?.includes(extension)) {
+            return callback(new Error('Дозволені лише JPG, PNG та WEBP фотографії'));
+        }
+
+        callback(null, true);
+    },
     limits: {
-        fileSize: 5 * 1024 * 1024,
+        fileSize: MAX_PHOTO_BYTES,
         files: 1
     }
 });

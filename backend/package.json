@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "test": "node --test test/*.test.js",
-    "migrate:accounts": "node sql/migrateAccounts.js"
+    "migrate:accounts": "node sql/migrateAccounts.js",
+    "migrate:photos": "node sql/migratePhotos.js"
   },
   "keywords": [],
   "author": "",

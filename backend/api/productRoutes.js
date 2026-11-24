@@ -1,6 +1,7 @@
 
 const express = require('express');
-const fs = require('fs');
+const { createHash, randomUUID } = require('node:crypto');
+const { PHOTO_PREFIX, PHOTO_EXTENSIONS, detectPhotoType } = require('../service/productPhoto');
 const IdempotencyStore = require('../middleware/idempotencyStore');
 const requireAdmin = require('../middleware/requireAdmin');
 const upload = require('../middleware/uploadMiddleware');
@@ -20,17 +21,20 @@ function createProductRoutes(productService) {
             data.stock = Number(data.stock);
         }
 
-        if (req.file) {
-            data.imageUrl = `/uploads/products/${req.file.filename}`;
-        }
-
         return data;
     }
 
-    function removeUploadedFile(req) {
-        if (req.file) {
-            fs.unlink(req.file.path, () => {});
+    function preparePhoto(file) {
+        if (!file) return null;
+        const contentType = detectPhotoType(file.buffer);
+        if (contentType !== file.mimetype) {
+            throw new Error('Дозволені лише JPG, PNG та WEBP фотографії');
         }
+        return {
+            path: PHOTO_PREFIX + randomUUID() + PHOTO_EXTENSIONS[contentType][0],
+            data: file.buffer,
+            contentType
+        };
     }
 
     router.get('/', async (req, res, next) => {
@@ -46,10 +50,14 @@ function createProductRoutes(productService) {
     router.post('/', requireAdmin, upload.single('image'), async (req, res, next) => {
         try {
             const data = prepareProductData(req);
+            const photo = preparePhoto(req.file);
+            if (photo) delete data.imageUrl;
+
+            const createProduct = () => productService.create(data, photo);
             const key = req.get('Idempotency-Key');
 
             if (!key) {
-                const product = await productService.create(data);
+                const product = await createProduct();
 
                 return res.status(201)
                     .location(`/items/${product.id}`)
@@ -62,7 +70,7 @@ function createProductRoutes(productService) {
                     ? {
                         originalname: req.file.originalname,
                         mimetype: req.file.mimetype,
-                        size: req.file.size
+                        sha256: createHash('sha256').update(req.file.buffer).digest('hex')
                     }
                     : null
             };
@@ -70,21 +78,15 @@ function createProductRoutes(productService) {
             const outcome = await idempotencyStore.execute(
                 key,
                 idempotencyData,
-                () => productService.create(data)
+                createProduct
             );
 
             if (outcome.conflict) {
-                removeUploadedFile(req);
-
                 return res.status(409).json({
                     error: 'Conflict',
                     code: 'IDEMPOTENCY_KEY_CONFLICT',
                     requestId: req.requestId
                 });
-            }
-
-            if (outcome.replayed) {
-                removeUploadedFile(req);
             }
 
             res.setHeader(
@@ -97,7 +99,6 @@ function createProductRoutes(productService) {
                 .json(outcome.result);
 
         } catch (error) {
-            removeUploadedFile(req);
             next(error);
         }
     });
@@ -118,12 +119,12 @@ function createProductRoutes(productService) {
 
             const product = await productService.update(
                 req.params.id,
-                data
+                data,
+                preparePhoto(req.file)
             );
 
             return res.status(200).json(product);
         } catch (error) {
-            removeUploadedFile(req);
             next(error);
         }
     });

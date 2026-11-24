@@ -2,6 +2,7 @@
 const express = require('express');
 const path = require('path');
 
+const { PHOTO_PREFIX, PHOTO_FILENAME } = require('./service/productPhoto');
 const { createAccountRoutes } = require('./api/accountRoutes');
 const createOrderRoutes = require('./api/orderRoutes');
 const createProductRoutes = require('./api/productRoutes');
@@ -24,7 +25,18 @@ function createApp({ productService, orderService, accountService }) {
     // Віддаємо HTML, CSS та JavaScript клієнту
     app.use(express.static(path.join(__dirname, '../frontend/public')));
 
-    // Віддаємо фотографії товарів
+    // Спільне сховище фотографій і локальні файли, які ще не перенесли.
+    app.get(`${PHOTO_PREFIX}:filename`, async (req, res, next) => {
+        if (!PHOTO_FILENAME.test(req.params.filename)) return next();
+        const photo = await productService.findPhoto(PHOTO_PREFIX + req.params.filename);
+        if (!photo) return next();
+
+        res.set('Cache-Control', 'public, max-age=31536000, immutable');
+        res.set('X-Content-Type-Options', 'nosniff');
+        res.type(photo.contentType).send(photo.data);
+    });
+
+    // Віддаємо локальні фотографії товарів
     app.use(
         '/uploads',
         express.static(path.join(__dirname, 'uploads'))
